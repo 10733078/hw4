@@ -1,0 +1,111 @@
+from math import radians, sin, cos, sqrt, atan2
+
+class Node:
+    def __init__(self, building, distance):
+        self.building = building
+        self.distance = distance
+        self.left = None
+        self.right = None
+
+def calculate_distance(lat1, lon1, lat2, lon2):
+    R = 6371.0
+    lat1 = radians(lat1)
+    lon1 = radians(lon1)
+    lat2 = radians(lat2)
+    lon2 = radians(lon2)
+    dlat = lat2 - lat1
+    dlon = lon2 - lon1
+    a = sin(dlat / 2)**2 + cos(lat1) * cos(lat2) * sin(dlon / 2)**2
+    c = 2 * atan2(sqrt(a), sqrt(1 - a))
+    distance = R * c
+    return distance
+
+def insert(root, building, distance):
+    if root is None:
+        return Node(building, distance)
+    if distance < root.distance:
+        root.left = insert(root.left, building, distance)
+    else:
+        root.right = insert(root.right, building, distance)
+    return root
+
+def dfs_traversal(root):
+    if root:
+        print(root.building)
+        dfs_traversal(root.left)
+        dfs_traversal(root.right)
+
+def bfs_traversal(root):
+    queue = []
+    if root:
+        queue.append(root)
+    while queue:
+        node = queue.pop(0)
+        print(node.building)
+        if node.left:
+            queue.append(node.left)
+        if node.right:
+            queue.append(node.right)
+
+def find_path_to_minimum_node(root):
+    path = []
+    current = root
+    while current:
+        path.append(current.building)
+        if current.left:
+            current = current.left
+        else:
+            break
+    return path
+
+def find_closest_treasure(root):
+    closest = None
+    min_distance = float('inf')
+
+    def find_minimum_node(node):
+        nonlocal closest, min_distance
+        if node:
+            if node.distance < min_distance:
+                min_distance = node.distance
+                closest = node.building
+            find_minimum_node(node.left)
+            find_minimum_node(node.right)
+
+    find_minimum_node(root)
+    return closest, round(min_distance, 1)
+
+def main():
+    n = 7
+    player_lat, player_lon = 25.29, 121.67
+    building_details = [
+        ("Library", 25.123, 121.456),
+        ("StudentCenter", 25.234, 121.567),
+        ("ScienceBuilding", 25.345, 121.678),
+        ("Cafeteria", 25.210, 121.430),
+        ("Gym", 25.280, 121.570),
+        ("Stadium", 25.200, 121.480),
+        ("Auditorium", 25.260, 121.550)
+    ]
+
+    root = None
+
+    for i in range(n):
+        building, lat, lon = building_details[i]
+        distance = calculate_distance(player_lat, player_lon, lat, lon)
+        root = insert(root, building, distance)
+
+    print("DFS:")
+    dfs_traversal(root)
+
+    print("\nBFS:")
+    bfs_traversal(root)
+
+    path_to_minimum_node = find_path_to_minimum_node(root)
+    print("\nPath from Root to Minimum Node:")
+    print(' '.join(path_to_minimum_node))
+
+    closest_building, distance_to_closest = find_closest_treasure(root)
+    print(f"\nClosest Treasure Found: {closest_building} (Distance: {distance_to_closest} km)")
+
+if __name__ == "__main__":
+    main()
